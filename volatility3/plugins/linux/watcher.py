@@ -72,7 +72,6 @@ class Monitor(plugins.PluginInterface):
     
     def get_proc(self):
         proc_set = set()
-
         for task in pslist.PsList.list_tasks(self.context, self.config['primary'], self.config['vmlinux']):
             pid = task.pid
             ppid = 0
@@ -92,26 +91,21 @@ class Monitor(plugins.PluginInterface):
 
         return kern_set
 
-    def get_removed(self, prev, curr):
-        removed = []
-        
-        for elm in prev:
-            if elm not in curr:
-                removed.append(elm)
-    
-        return removed
+    def get_missing(self, 
+                    prev: set, 
+                    curr: set) -> set:
+        return prev - curr
 
-    def get_added(self, prev, curr):
-        added = []
-
-        for elm in curr:
-            if elm not in prev:
-                added.append(elm)
-
-        return added 
+    def get_added(self, 
+                  prev: set, 
+                  curr: set) -> set:
+        return curr - prev
     
     def run(self):     
-        count = -1
+        """
+        Write Doc string
+        """
+        first_iter = True
         time_interval = self.config['time-interval'][0]
         self.reload_memory()
 
@@ -125,16 +119,16 @@ class Monitor(plugins.PluginInterface):
                 curr_processes = self.get_proc()
                 curr_connections = self.get_conn()
 
-                if count != -1:
-                    stopped_processes = self.get_removed(prev_processes, curr_processes)
-                    unloaded_kernals = self.get_removed(prev_kernals, curr_kernals)
-                    closed_connections = self.get_removed(prev_connections, curr_connections)
+                if not first_iter:
+                    stopped_processes = self.get_missing(prev_processes, curr_processes)
+                    unloaded_kernals = self.get_missing(prev_kernals, curr_kernals)
+                    closed_connections = self.get_missing(prev_connections, curr_connections)
 
                     started_processes = self.get_added(prev_processes, curr_processes)
                     loaded_kernals = self.get_added(prev_kernals, curr_kernals)
                     new_connections = self.get_added(prev_connections, curr_connections)
 
-                    print(time.strftime("%d/%m/%Y %H:%M:%S",time.localtime()))
+                    print(time.strftime("%d/%m/%Y %H:%M:%S", time.localtime()))
                     if len(stopped_processes) > 0 or len(started_processes) > 0:
                         print("Processes: (pid, ppid, name)")
                         writer(stopped_processes, started_processes)
@@ -152,71 +146,41 @@ class Monitor(plugins.PluginInterface):
                         writer(closed_connections, new_connections)
                     else:
                         print("No connection update.")
+
                     print(flush = True)
+                else:
+                    first_iter = False
 
-                count = (count + 1) % 10
-
-                prev_kernals = {x for x in curr_kernals}
-                prev_processes = {x for x in curr_processes}
-                prev_connections = {x for x in curr_connections}
+                # Copying current values 
+                prev_kernals = {kernal for kernal in curr_kernals}
+                prev_processes = {process for process in curr_processes}
+                prev_connections = {connection for connection in curr_connections}
                 
                 self.reload_memory()
-
                 exec_end_time = time.time()
+                # Adjusting sleep time based on the execution duration
                 sleep_time = time_interval - (exec_end_time-exec_start_time)
                 if sleep_time > 0:
                     time.sleep(sleep_time)
 
-                #print(self.config['time-interval'][0], sleep_time, time.time()-exec_start_time)
-
         except KeyboardInterrupt as e:
-            # print(e)
             print(f"Logging Stopped {time.strftime('%d/%m/%Y %H:%M:%S',time.localtime())}.")
         
         return 
 
-def writer(deleted_list, added_list):
-    if len(deleted_list) ==0 and len(added_list) == 0:
+def writer(missing_set: set, 
+           added_set: set):
+    """
+        Write Doc string
+    """
+    if len(missing_set) ==0 and len(added_set) == 0:
         return
     
-    for deleted in deleted_list:
+    for deleted in missing_set:
         print("-", deleted)
     
-    for added in added_list:
+    for added in added_set:
         print("+", added)
     
-    print()
-    
-# class Process:
-
-#     def __init__(self, pid, ppid, name):
-#         self.pid = pid
-#         self.ppid = ppid
-#         self.name = name
-
-#     def __str__(self): 
-#         return f"{self.pid:<6} {self.ppid:<6} {self.name:<15}"
-
-# class KernalModule:
-
-#     def __init__(self, offset, name):
-#         self.offset = offset
-#         self.name = name
-
-#     def __str__(self): 
-#         return f"{self.offset:<15} {self.name:<15}" 
-
-# class Connection:
-
-#     def __init__(self, protocol, laddr, faddr, name, pid):
-#         self.protocol = protocol
-#         self.laddr = laddr
-#         self.faddr = faddr
-#         self.name = name
-#         self.pid = pid
-
-#     def __str__(self): 
-#         return f"{self.protocol:<6}{self.laddr:<15}>{self.faddr:<15} {self.pid:<}/{self.name:<}"   
-
-    
+    print() 
 
