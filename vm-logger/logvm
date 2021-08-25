@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# Kills program with name volatility3 in it
+function kill_monitor () {
+    pkill -f volatility3
+}
+
+trap 'kill_monitor' INT
+
+if [[ $1 == '' || $2 == '' ]]
+then 
+    echo "Usage: <path-to-$0>/$0 <one-XXXX> <TIME_INTERVAL>. Here one-1279"    
+    exit 0
+fi
+
+time_interval=$2
+
+# To make sure the correct vm is being monitored
+if [[ -f  /mnt/mem ]]
+then
+    umount /mnt
+fi
+
+vmifs name $1 /mnt
+
+old_wd=$(pwd)
+cd /root/volatility3
+
+python3 -m vol -f /mnt/mem linux.watcher --time-interval $time_interval
+
+cd $old_wd
