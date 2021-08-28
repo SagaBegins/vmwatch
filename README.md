@@ -131,20 +131,20 @@ It has the following functions
 **`get_added`** takes arguments prev and curr of the data obtained from one of the above commands and returns a set of added entries.  
 
 
-### **`vmidet`**: Vidya Sagar
+### **`logvm`**: Vidya Sagar
 
-`vmidet` is a shell script which is placed in the ids folder to meet project requirements. It requires volatility3 folder to be placed in /root and the `linux.watched.Monitor` plugin and its dependencies. 
+`logvm` is a shell script which is placed in the ids folder to meet project requirements. It requires volatility3 folder to be placed in /root and the `linux.watched.Monitor` plugin and its dependencies. 
 
-    Usage: vmidet <one-xxx> <time-interval>
+    Usage: logvm <one-xxx> <time-interval>
 
 where, xxx is the id of the target machine and time-interval is the time between successive logs.  
 The script unmounts `/mnt` if it exists and mounts the `mem` of the machine < one-xxx > to it.   
 
-### **`modwatch`**: Vidya Sagar
+### **`watchvm`**: Vidya Sagar
 
-`modwatch` is a shell script which is placed in the modwatch folder to meet the project requirements. It requires the libvmitrace library to be placed in /root folder. It also needs the modified version of `csec.cpp`, `SyscallLogger.cpp` and their dependencies to function properly. 
+`watchvm` is a shell script which is placed in the modwatch folder to meet the project requirements. It requires the libvmitrace library to be placed in /root folder. It also needs the modified version of `csec.cpp`, `SyscallLogger.cpp` and their dependencies to function properly. 
 
-    Usage: modwatch <one-xxx> [-p|--prevent|-prevent]
+    Usage: watchvm <one-xxx> [-p|--prevent|-prevent]
 
 where, is the id of the target machine and the optional options enable preventing init_module and finit_module syscalls when it doesn't meet the requirements.
 
